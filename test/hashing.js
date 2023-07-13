@@ -15,6 +15,8 @@ describe("Hashing Contract", () => {
         "zkpomegranate",
         "zkpomelo"
     ]
+    const merkleRoot = "0x8735337152167feec443ede60bd7cf19e2057acaf7be9617551b10abac7cc544"
+
     const hashed_elements = [
         "0x760785a457f46af4582b62962c4d96be98c68df9619556fa20af3c286343bf81",
         "0xcc61ebc064488ecc9c6aa0138875f527fe4033a5b0fb9a1acf9d48f8809a82e9",
@@ -30,12 +32,12 @@ describe("Hashing Contract", () => {
     
     before(async () => {
         [deployer] = await ethers.getSigners();
-        console.log("Deployer Address: " + deployer.address);
+        // console.log("Deployer Address: " + deployer.address);
 
         const Hashing = await ethers.getContractFactory('hashing');
         hashing = await Hashing.deploy();
         await hashing.deployed();
-        console.log("Contract Address: " + hashing.address);
+        // console.log("Contract Address: " + hashing.address);
     });
 
     it('The deployer should be the s/c owner', async () => {
@@ -43,21 +45,65 @@ describe("Hashing Contract", () => {
         expect(owner).to.equal(deployer.address);
     });
 
-    it("Gets the string hash", async function () {
-        const txResponse = await hashing.hashString('zkplayground');
+    async function getHash(str) {
+        const txResponse = await hashing.hashString(str);
         const txReceipt = await txResponse.wait();
         const [transferEvent] = txReceipt.events;
         const { _hash } = transferEvent.args;
+        return _hash;
+    }
+
+    it("Gets the string hash", async function () {
+        const _hash = await getHash('zkplayground');
         expect(_hash).to.equal(hashed_elements[0]);
     });
 
-    it("Gets all the string hashes", async function () {
-        const txResponse = await hashing.hashStrings(elements);
+    async function getAllHashes(strs) {
+        const txResponse = await hashing.hashStrings(strs);
         const txReceipt = await txResponse.wait();
         const [transferEvent] = txReceipt.events;
         const { _hashes } = transferEvent.args;
+        return _hashes;
+    }
+
+    it("Gets all the string hashes", async function () {
+        const _hashes = await getAllHashes(elements);
         _hashes.forEach((hash, index) => {
             expect(hash).to.equal(hashed_elements[index]);
         })
+    });
+
+    async function getHashPairs(left, right) {
+        const txResponse = await hashing.hashPairs(left, right);
+        const txReceipt = await txResponse.wait();
+        const [transferEvent] = txReceipt.events;
+        const { _hash } = transferEvent.args;
+        return _hash;
+    }
+
+    it("Calculate the correct merkle root", async function () {
+        const _hash01 = await getHashPairs(hashed_elements[0], hashed_elements[1])
+        const _hash23 = await getHashPairs(hashed_elements[2], hashed_elements[3])
+        const _hash45 = await getHashPairs(hashed_elements[4], hashed_elements[5])
+        const _hash67 = await getHashPairs(hashed_elements[6], hashed_elements[7])
+        const _hash89 = await getHashPairs(hashed_elements[8], hashed_elements[9])
+        const _hash0123 = await getHashPairs(_hash01, _hash23)
+        const _hash4567 = await getHashPairs(_hash45, _hash67)
+        const _hash01234567 = await getHashPairs(_hash0123, _hash4567)
+        const root = await getHashPairs(_hash01234567, _hash89)
+        expect(root).to.equal(merkleRoot);
+    });
+
+    it("Verify the existance of 'zkplayground' in the merkle tree", async function () {
+        const proof = ["0xcc61ebc064488ecc9c6aa0138875f527fe4033a5b0fb9a1acf9d48f8809a82e9",
+        "0x6cba9ea971cd36a1100bbe94d254d62109b18a1eb3714c80fbbcc9ffef369744",
+        "0x1970fd3f2368dcb865dcb5b9114974e721fc396397503ac3aec52b594c8caf2d",
+        "0x48e40f6315e524c119b977fa35981dbdc77f77a902637ce4f4ac173a8bf497d1"]
+        
+        let _hash = await getHash('zkplayground');
+        for (let i = 0; i < proof.length; i++) {
+            _hash = await getHashPairs(_hash, proof[i])
+        }
+        expect(_hash).to.equal(merkleRoot);
     });
 });
