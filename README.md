@@ -4,11 +4,31 @@ This is just a tool for solving [2023 ZK playgound hw0](https://hackmd.io/@ChiHa
 
 node version: v18.16.0
 
-1. `npm install`
+1. [scripts/problem1.js](scripts/problem1.js) is the solution for problem 1.
 
-2. `npx hardhat compile`
+   ```
+   npx hardhat run scripts/problem1.js --network sepolia
+   ```
 
-3. `npx hardhat test`
+2. [script/problem2.js](script/problem2.js) is the solution for problem 2.
+   
+   ```
+   npx hardhat run scripts/problem2.js --network sepolia
+   ```
+
+3. [script/problem2.js](script/problem2.js) is the hacky solution for problem 2.
+ 
+   ```
+   npx hardhat run scripts/problem2_hacky.js --network sepolia
+   ```
+
+4. [contracts/Hashing.sol](contracts/Hashing.sol) is the contract for keccak256 hashing method. [test/hashing.js](test/hashing.js) provides some merkle tree-related test cases for the contract.
+
+   ```
+   npm install
+   npx hardhat compile
+   npx hardhat test
+   ```
 
 The merkle tree with 10 leaves looks like this:
 
@@ -37,7 +57,8 @@ The merkle tree with 10 leaves looks like this:
 ```
 
 References:
+- [MerleTree.js example](https://lab.miguelmota.com/merkletreejs/example/)
+- [merkletreejs](https://github.com/merkletreejs/merkletreejs#Getting-started)
 - [Interact With Your Smart Contract](https://www.web3.university/tracks/create-a-smart-contract/interact-with-your-smart-contract)
 - [How to send ETH and transfer ERC20 token with ethersJs](https://www.youtube.com/watch?v=c8Pkz1NqWNw&ab_channel=CodeWithJoe)
-- [merkletreejs](https://github.com/merkletreejs/merkletreejs#Getting-started)
 - [Merkle Generator and Prover in Solidity](https://github.com/dmfxyz/murky)
